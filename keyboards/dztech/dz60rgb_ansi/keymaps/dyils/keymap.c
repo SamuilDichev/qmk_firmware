@@ -1,14 +1,17 @@
 #include QMK_KEYBOARD_H
 
+    
 enum layers {
     _BASE,
     _SPEC, /* Special layer with F1-F24 keys, media keys, etc */
     _RGB,
 };
 
+
 enum tap_dances {
     TD_SPECIAL_KEY,
 };
+
 
 void SPECIAL_KEY(qk_tap_dance_state_t *state, void *user_data) {
     switch (state->count) {
@@ -27,10 +30,12 @@ void SPECIAL_KEY(qk_tap_dance_state_t *state, void *user_data) {
     }
 };
 
+
 // Tap Dance definitions
 qk_tap_dance_action_t tap_dance_actions[] = {
     [TD_SPECIAL_KEY] = ACTION_TAP_DANCE_FN(SPECIAL_KEY),
 };
+
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /* Qwerty
@@ -105,12 +110,26 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 
-bool rgb_matrix_indicators_user(void) {
-    switch (get_highest_layer(layer_state)) {
-        case _SPEC:
-            rgb_matrix_set_color_all(0,255,0);
-            return false; // "false" doesn't give back control of the RGB to the standard animations
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    if (get_highest_layer(layer_state) == _SPEC) {
+        uint8_t layer = get_highest_layer(layer_state);
+        RGB rgb = hsv_to_rgb(rgb_matrix_get_hsv());
+
+        for (uint8_t row = 0; row < MATRIX_ROWS; ++row) {
+            for (uint8_t col = 0; col < MATRIX_COLS; ++col) {
+                uint8_t index = g_led_config.matrix_co[row][col];
+
+                if (index >= led_min && index < led_max && index != NO_LED) {
+                    if (keymap_key_to_keycode(layer, (keypos_t){col,row}) > KC_TRNS) {
+                        rgb_matrix_set_color(index, rgb.r, rgb.g, rgb.b);
+                    }
+
+                    if (keymap_key_to_keycode(layer, (keypos_t){col,row}) == KC_TRNS) {
+                        rgb_matrix_set_color(index, 0, 0, 0);
+                    }
+                }
+            }
+        }
     }
-    
-    return true; // Give RGB control to the pre-configured RGB modes/animations
+    return false;
 }
