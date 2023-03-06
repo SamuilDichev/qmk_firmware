@@ -35,3 +35,6 @@
 
 #define RGB_MATRIX_LED_COUNT 71
 #define DRIVER_INDICATOR_LED_TOTAL 0
+
+/* ms to wait for tap dancing*/
+#define TAPPING_TERM 200
