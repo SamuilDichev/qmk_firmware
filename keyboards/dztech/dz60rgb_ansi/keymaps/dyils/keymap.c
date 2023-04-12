@@ -3,6 +3,7 @@
     
 enum layers {
     _BASE,
+    _BASE_TARKOV,
     _SPEC, /* Special layer with F1-F24 keys, media keys, etc */
     _RGB,
 };
@@ -13,12 +14,54 @@ enum tap_dances {
 };
 
 
+enum custom_keycodes {
+    C_AND_F13 = SAFE_RANGE,
+    V_AND_F14,
+};
+
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case C_AND_F13:
+            if (record->event.pressed) {
+                register_code(KC_C);
+                _delay_ms(10);
+                register_code(KC_F13);
+            } else {
+                unregister_code(KC_F13);
+                _delay_ms(15);
+                unregister_code(KC_C);
+            }
+            break;
+        case V_AND_F14:
+            if (record->event.pressed) {
+                register_code(KC_V);
+                _delay_ms(11);
+                register_code(KC_F14);
+            } else {
+                unregister_code(KC_F14);
+                _delay_ms(14);
+                unregister_code(KC_V);
+            }
+            break;
+    }
+    return true;
+}
+
+
 void SPECIAL_KEY(qk_tap_dance_state_t *state, void *user_data) {
     switch (state->count) {
-        case 1:  // Capitalizes the next word only
+        case 2:  // Capitalizes the next word only
             caps_word_on();
             break;
-        case 3:  // Toggle RGB layer
+        case 3:
+            if (layer_state_is(_BASE_TARKOV)) {
+                layer_off(_BASE_TARKOV);
+            } else {
+                layer_on(_BASE_TARKOV);
+            }
+            break;
+        case 5:  // Toggle RGB layer
             if (layer_state_is(_RGB)) {
                 layer_off(_RGB);
             } else {
@@ -56,6 +99,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
        KC_TAB,    KC_Q,    KC_W,    KC_E,    KC_R,     KC_T,     KC_Y,    KC_U,    KC_I,    KC_O,     KC_P,    KC_LBRC, KC_RBRC, KC_BSLS,
        MO(_SPEC), KC_A,    KC_S,    KC_D,    KC_F,     KC_G,     KC_H,    KC_J,    KC_K,    KC_L,     KC_SCLN, KC_QUOT,          KC_ENT,
        KC_LSFT,            KC_Z,    KC_X,    KC_C,     KC_V,     KC_B,    KC_N,    KC_M,    KC_COMM,  KC_DOT,  KC_SLSH,          TD(TD_SPECIAL_KEY),
+       KC_LCTL,   KC_LGUI, KC_LALT,                              KC_SPC,                              KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
+    ),
+    /* Qwerty but C also presses Q and V also presses E */
+    [_BASE_TARKOV] = LAYOUT_60_ansi(
+       KC_GRV,    KC_1,    KC_2,    KC_3,    KC_4,     KC_5,     KC_6,    KC_7,    KC_8,    KC_9,     KC_0,    KC_MINS, KC_EQL,  KC_BSPC,
+       KC_TAB,    KC_Q,    KC_W,    KC_E,    KC_R,     KC_T,     KC_Y,    KC_U,    KC_I,    KC_O,     KC_P,    KC_LBRC, KC_RBRC, KC_BSLS,
+       MO(_SPEC), KC_A,    KC_S,    KC_D,    KC_F,     KC_G,     KC_H,    KC_J,    KC_K,    KC_L,     KC_SCLN, KC_QUOT,          KC_ENT,
+       KC_LSFT,            KC_Z,    KC_X,    C_AND_F13,V_AND_F14,KC_B,    KC_N,    KC_M,    KC_COMM,  KC_DOT,  KC_SLSH,          TD(TD_SPECIAL_KEY),
        KC_LCTL,   KC_LGUI, KC_LALT,                              KC_SPC,                              KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
     ),
     /* Special
